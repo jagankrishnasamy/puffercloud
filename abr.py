@@ -56,7 +56,6 @@ def run_ssh_commands(ip):
 
         print("The command was: " + item)
         print("The output is: " + str(stdout))
-        print("The derr is: " + str(stderr))
         print("")
 
 
@@ -65,7 +64,7 @@ def run_ssh_commands(ip):
     del ssh, ssh_stdin, ssh_stdout, ssh_stderr
 
 def main():
-    html_file = r"C:\Users\Jagan\Downloads\exp2.html"
+    html_file = r"exp.html"
     address_list = get_ips(html_file)
     print(address_list[1])
     run_ssh_commands(address_list[1])
