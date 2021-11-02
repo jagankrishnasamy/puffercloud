@@ -1,0 +1,190 @@
+
+(function () {
+  'use strict';
+
+  function ForceGraph()
+  {
+    this.nodes = [];
+    this.links = [];
+    this.force = d3v4.forceSimulation(this.nodes)
+      .force('charge', d3v4.forceManyBody())
+      .force('link', d3v4.forceLink(this.links))
+      .force('center', d3v4.forceCenter())
+      .force('x', d3v4.forceX())
+      .force('y', d3v4.forceY())
+      .alphaMin(0.1);
+
+    
+
+    
+    this.force.force('link')
+      .distance(function(d) {
+	return d.distance;
+      })
+      .strength(function(d) {
+	return d.strength;
+      });
+
+    this.force.force('charge').strength(function (d) {
+      return -500;
+    });
+    
+    this.scale = { deltaX: 0, deltaY: 0, factorX: 1, factorY: 1 };
+    this.panelWidth = 1000;
+    this.panelHeight = 1000;
+
+/*
+    this.force.gravity(0.05)
+      .charge(-500)
+      .size([1000, 1000])
+*/
+//    this.force.on('tick', _.bind(this.tick, this));
+    this.shouldDisplay = true;
+
+//    _.extend(this, Backbone.Events);
+  }
+
+  ForceGraph.prototype = {
+
+    updateScale: function () {
+      var minX = getExtreme(Math.min, this.nodes, 'x');
+      var maxX = getExtreme(Math.max, this.nodes, 'x');
+      var minY = getExtreme(Math.min, this.nodes, 'y');
+      var maxY = getExtreme(Math.max, this.nodes, 'y');
+      if (maxX === minX)
+      {
+	this.scale.deltaX = 500 - minX;
+	this.scale.factorX = 1;
+      }
+      else
+      {
+	this.scale.deltaX = -minX;//(minX + maxX + this.panelWidth) / 2;
+	this.scale.factorX = this.panelWidth / (maxX - minX);
+      }
+      if (maxY === minY)
+      {
+	this.scale.deltaY = 500 - minY;
+	this.scale.factorY = 1;
+      }
+      else
+      {
+	this.scale.deltaY = -minY;//(minY + maxY + this.panelHeight) / 2;
+	this.scale.factorY = this.panelHeight / (maxY - minY);
+      }
+    },
+
+    transformX: function (x) {
+      return (x + this.scale.deltaX) * this.scale.factorX;
+    },
+
+    transformY: function (y) {
+      return (y + this.scale.deltaY) * this.scale.factorY;
+    },
+    
+    add: function (newNodes, newLinks) {
+      var that = this;
+      _.each(newNodes, function (node) {
+	that.nodes.push(node);
+	that.force.nodes(that.nodes);
+      });
+      _.each(newLinks, function (link) {
+	that.links.push(link);
+	that.force.force('link').links(that.links);
+      });
+      this.updateScale();
+    },
+
+    remove: function (oldNodes, oldLinks) {
+      for (var i = this.nodes.length - 1; i >= 0; i--)
+      {
+	if (_.contains(oldNodes, this.nodes[i]))
+	{
+	  this.nodes.splice(i, 1);
+	}
+      }
+      for (var i = this.links - 1; i >= 0; i--)
+      {
+	if (_.contains(oldLinks, this.links[i]) ||
+	    _.contains(oldNodes, this.links[i].source) ||
+	    _.contains(oldNodes, this.links[i].target))
+	{
+	  this.links.splice(i, 1);
+	}
+      }
+      this.updateScale();
+      //this.tick();
+    },
+
+    start: function () {
+      this.force.alpha(1);
+      this.force.restart();
+    },
+
+    stop: function () {
+      this.force.stop();
+    },
+
+    skipAhead: function () {
+      this.shouldDisplay = false;
+      this.force.alpha(1);
+      this.force.restart();
+      for (var i = 0; i < 40; i += 1)
+      {
+	this.force.tick();
+      }
+      this.force.stop();
+      this.shouldDisplay = true;
+      this.force.restart();
+    },
+
+    tick: function (event) {
+      var forceStopped = false;
+/*
+      console.log(this.force.alpha());
+      if (event && this.force.alpha() < 0.5)//event.alpha < 0.03)
+      {
+	_.defer(function () {
+	  this.force.alpha(0);
+	  this.force.stop();
+	  console.log('stopping');
+	}.bind(this));
+	forceStopped = true;
+      }
+*/
+      this.trigger('tick', forceStopped, this.shouldDisplay);
+    },
+/*
+    findEndpoint: function (nodeModel) {
+      var result = null;
+      _.each(this.nodes, function (node) {
+	if (node.model && node.model === nodeModel)
+	{
+	  result = node;
+	}
+      });
+      return result;
+    }
+*/
+  }
+
+  function getExtreme(f, list, key)
+  {
+    var result = null;
+    _.each(list, function (item) {
+      if (item[key] !== null && item[key] !== undefined)
+      {
+	if (result === null)
+	{
+	  result = item[key];
+	}
+	else
+	{
+	  result = f(result, item[key]);
+	}
+      }
+    });
+    return result;
+  }
+
+  window.jacksmod.common.ForceGraph = ForceGraph;
+})();

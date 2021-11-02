@@ -1,0 +1,40 @@
+(function () {
+})();
+
+(function () {
+  'use strict';
+
+  var $j = window.jacksmod;
+  function ImagePicker()
+  {
+    this.root = new $j.common.component.ImagePickerComponent;
+    this.el = this.root.render();
+    this.pick = _.bind(pick, this);
+    this.on = _.bind(on, this);
+    this.off = _.bind(off, this);
+  };
+
+  function pick(starting, images, types)
+  {
+    this.root.update({
+      selected: starting,
+      globalImages: images['public'],
+      userImages: images['my-images'],
+      projectImages: images['project'],
+      systemImages: images['system'],
+      types: types
+    });
+  }
+
+  function on(label, f)
+  {
+    return this.root.on(label, f);
+  }
+
+  function off(label, f)
+  {
+    return this.root.off(label, f);
+  }
+
+  $j.ImagePicker = ImagePicker;
+})();

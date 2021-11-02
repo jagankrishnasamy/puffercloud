@@ -1,0 +1,199 @@
+(function () {
+  var loader = window.jacksmod.loader;
+})();
+
+(function () {
+  'use strict';
+
+  var common = window.jacksmod.common;
+
+  var GraphLanComponent = common.ComponentQuery.extend({
+
+    initialize: function ()
+    {
+      this.x = undefined;
+      this.y = undefined;
+      this.forceNode = undefined;
+      this.centerLink = undefined;
+      this.forceCenter = undefined;
+      this.lines = [];
+      this.links = [];
+      this.added = [];
+      this.centerX = undefined;
+      this.centerY = undefined;
+      this.lineX = [];
+      this.lineY = [];
+    },
+
+    cleanupForce: function (force)
+    {
+      if (this.forceCenter !== undefined)
+      {
+	var links = _.clone(this.links);
+	if (this.centerLink !== undefined)
+	{
+	  links.push(this.centerLink);
+	}
+	force.remove([this.forceCenter, this.forceNode], links);
+      }
+    },
+
+    cleanup: function ()
+    {
+      if (this.rendered)
+      {
+	this.root.remove();
+      }
+    },
+
+    render: function (base)
+    {
+      if (! this.rendered)
+      {
+	this.root = base.append('svg:g');
+	this.$el = $('<div>'); // TODO Replace with actual el
+
+	this.lineContainer = this.root.append('svg:g')
+          .attr("class", "link");
+
+	this.center = this.root.append('svg:g')
+	  .attr("class", "boxgroup");
+
+	this.centerRect = this.center.append('svg:rect')
+	  .attr("class", "linkbox")
+	  .attr('x', '-30')
+	  .attr('y', '-30')
+	  .attr('width', '60')
+	  .attr('height', '60');
+
+      }
+      return this.superRender();
+    },
+
+    update: function (state)
+    {
+      if (state)
+      {
+	this.center.attr("id", state.lan.id);
+	if (state.force)
+	{
+	  this.updateForce(state.force, state.endpoints);
+	}
+      }
+      this.superUpdate(state);
+    },
+
+    updateForce: function (force, endpoints)
+    {
+      if (this.forceCenter === undefined)
+      {
+	this.forceCenter = {
+	  fixed: true,
+	  fx: 0,
+	  fy: 0
+	  //x: Math.random() * 1000,
+	  //y: Math.random() * 1000
+	};
+      }
+      var sum = { x: 0, y: 0 };
+      _.each(endpoints, function (end) {
+	if (end.x && end.y)
+	{
+	  sum.x += end.x;
+	  sum.y += end.y;
+	}
+      });
+      this.forceCenter.fx = sum.x / endpoints.length;
+      this.forceCenter.fy = sum.y / endpoints.length;
+      this.forceCenter.x = this.forceCenter.fx;
+      this.forceCenter.y = this.forceCenter.fy;
+
+      if (this.forceNode === undefined)
+      {
+	this.forceNode = {
+	  x: this.forceCenter.x + Math.random() * 100 - 50,
+	  y: this.forceCenter.y + Math.random() * 100 - 50
+	};
+	this.centerLink = {
+	  source: this.forceNode,
+	  target: this.forceCenter,
+	  distance: 30,
+	  strength: 2.0
+	};
+	force.add([this.forceNode, this.forceCenter], [this.centerLink]);
+      }
+      this.updateForceLinks(force, endpoints);
+      force.updateScale();
+
+      var centerX = force.transformX(this.forceNode.x);
+      var centerY = force.transformY(this.forceNode.y);
+
+      for (var i = 0; i < this.links.length; i += 1)
+      {
+	var x = force.transformX(this.links[i].target.x);
+	var y = force.transformY(this.links[i].target.y);
+	if (this.centerX === undefined || this.centerY === undefined ||
+	    this.lineX[i] === undefined || this.lineY[i] === undefined ||
+	    Math.abs(this.centerX - centerX) > 10 ||
+	    Math.abs(this.centerY - centerY) > 10 ||
+	    Math.abs(this.lineX[i] - x) > 10 ||
+	    Math.abs(this.lineY[i] - y) > 10)
+	{
+	  this.lineX[i] = x;
+	  this.lineY[i] = y;
+	  this.lines[i]
+	    .attr('x1', centerX)
+	    .attr('y1', centerY)
+	    .attr('x2', x)
+	    .attr('y2', y);
+	}
+      }
+
+      if (this.centerX === undefined || this.centerY === undefined ||
+	  Math.abs(this.centerX - centerX) > 10 ||
+	  Math.abs(this.centerY - centerY) > 10)
+      {
+	this.centerX = centerX;
+	this.centerY = centerY;
+	this.center.attr('transform',
+			 `translate(${centerX},${centerY})`);
+      }
+
+    },
+
+    updateForceLinks: function (force, endpoints) {
+      this._each(endpoints, function (end) {
+	if (! _.contains(this.added, end)) {
+	  this.added.push(end);
+	  this.addEndpoint(force, end);
+	}
+      });
+      // TODO Remove links
+      /*
+      this._each(this.links, function (link) {
+	link.distance = distance;
+	link.strength = strength;
+      });
+*/
+    },
+
+    addEndpoint: function (force, endpoint) {
+      var link = {};
+      link.source = this.forceCenter;
+      link.target = endpoint;
+      link.distance = 100;
+      link.strength = 1.5;
+      this.links.push(link);
+      this.lineX.push(undefined);
+      this.lineY.push(undefined);
+      var line = this.lineContainer.append('svg:line')
+	  .attr('class', 'linkline');
+//	.attr("id", 'link-' + this.model.id + '-node-' + endpoint.id);
+      this.lines.push(line);
+      force.add([], [link]);
+    }
+    
+  });
+
+  common.component.GraphLanComponent = GraphLanComponent;
+})();

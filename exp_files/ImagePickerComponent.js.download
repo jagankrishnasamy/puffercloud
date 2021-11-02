@@ -1,0 +1,325 @@
+(function () {
+})();
+
+(function () {
+  'use strict';
+  var common = window.jacksmod.common;
+
+  var template = `
+  <div class="form-inline">
+    <div class="form-group">
+      <label for="search-images">Filter </label>
+      <input type="text" class="form-control" id="search-images">
+    </div>
+  </div><br/>
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" style="overflow: scroll; max-height: 50%">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingTwo">
+      <h4 class="panel-title">
+        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-my-images" aria-expanded="false" aria-controls="collapse-my-images">
+          My Images
+        </a>
+      </h4>
+    </div>
+    <div id="collapse-my-images" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+      <div class="panel-body" id="picker-my-images">
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingFour">
+      <h4 class="panel-title">
+        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-system-images" aria-expanded="false" aria-controls="collapse-system-images">
+          System Images
+        </a>
+      </h4>
+    </div>
+    <div id="collapse-system-images" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFour">
+      <div class="panel-body" id="picker-system-images">
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingOne">
+      <h4 class="panel-title">
+        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-global-images" aria-expanded="false" aria-controls="collapse-global-images">
+          Global Images
+        </a>
+      </h4>
+    </div>
+    <div id="collapse-global-images" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+      <div class="panel-body" id="picker-global-images">
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingThree">
+      <h4 class="panel-title">
+        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-custom-image" aria-expanded="false" aria-controls="collapse-custom-image">
+          Custom Image
+        </a>
+      </h4>
+    </div>
+    <div id="collapse-custom-image" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+      <div class="panel-body">
+        <p>Paste the URN of your image below.</p>
+        <textarea id="custom-image" placeholder="URN example: urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU16-64-STD" style="width: 100%"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+	<div id='imagepicker_buttons'>
+	  <button id='imagepicker_select'
+		  class='btn btn-primary btn-sm pull-right'
+		  type='submit' name='select'>
+	    Select Image</button>
+	  <button type='button' class='btn btn-default btn-sm pull-right'
+		  id='imagepicker_cancel'
+		  aria-hidden='true'>
+	    Cancel</button>
+          <div class="clearfix"></div>
+	</div>
+`;
+  
+  var ImagePickerComponent = common.ComponentQuery.extend({
+
+    initialize: function () {
+      this.shown = {};
+      this.names = {};
+      this.descriptions = {};
+      this.doms = {};
+      this.versions = {};
+    },
+
+    render: function () {
+      if (! this.rendered)
+      {
+	this.$el = $(template);
+	this.$('#imagepicker_select').on('click', _.bind(this.onSelect, this));
+	this.$('#imagepicker_cancel').on('click', _.bind(this.onClose, this));
+	this.$('#imagepicker_close').on('click', _.bind(this.onClose, this));
+	this.$('#search-images').on('change keyup paste', _.bind(this.changeSearch, this));
+      }
+      return this.superRender();
+    },
+
+    update: function (state) {
+      this.selected = state.selected;
+      this.globalImages = state.globalImages;
+      this.userImages = state.userImages;
+      this.systemImages = state.systemImages;
+      this.types = state.types;
+      this.shown = {};
+      this.names = {};
+      this.descriptions = {};
+      this.doms = {};
+      this.versions = {};
+      this.$('#search-images').val('');
+      var foundGlobal = this.updateSection(state.selected,
+					   state.globalImages,
+					   state.types,
+					   this.$('#picker-global-images'));
+      var foundUser = this.updateSection(state.selected, state.userImages,
+					 state.types,
+					 this.$('#picker-my-images'));
+      var foundSystem = this.updateSection(state.selected, state.systemImages,
+					   state.types,
+					   this.$('#picker-system-images'));
+      if (foundUser)
+      {
+	this.$('#collapse-my-images').collapse('show');
+      }
+      else if (foundSystem)
+      {
+	this.$('#collapse-system-images').collapse('show');
+      }
+      else if (foundGlobal)
+      {
+	this.$('#collapse-global-images').collapse('show');
+      }
+      else
+      {
+	this.$('#collapse-system-images').collapse('show');
+      }
+      if (this.selected !== null && this.selected !== undefined)
+      {
+	this.$('#custom-image').val(this.selected);
+      }
+    },
+
+    updateSection: function (selected, images, types, dom) {
+      var found = false;
+      var foundAny = false;
+      dom.empty();
+      _.each(images, function (item) {
+	item.urn = item.urn.replace(/(image\+[^:]+):(.*)/, '$1//$2');
+	if (this.versions[item.urn] === undefined)
+	{
+	  foundAny = true;
+	  var deprecated = '';
+	  if (item.deprecated && item.deprecated !== "0")
+	  {
+	    var deprecatedMessage = '';
+	    if (item.deprecatedMessage)
+	    {
+	      deprecatedMessage = ': ' + item.deprecatedMessage;
+	    }
+	    deprecated = ' (deprecated' + deprecatedMessage + ')';
+	  }
+	  var compatibleMessage = '';
+	  if (! isCompatible(item.types, types))
+	  {
+	    compatibleMessage = ' (incompatible with current hardware selection)';
+	  }
+	  var child = $('<button type="button" class="btn btn-lg" style="text-align: left; white-space: normal; width: 100%"></button>');
+	  child.append('<p><b>' + _.escape(imageDisplay(item.urn)) +
+		       '</b>' + deprecated + compatibleMessage + '</p>');
+	  if (item.version !== '')
+	  {
+	    child.append('<p class="version"><b>Version:</b> ' + _.escape(item.version) + '</p>');
+	  }
+	  if (item.version === '0')
+	  {
+	    child.find('.version').hide();
+	  }
+	  child.append('<p>' + _.escape(item.description) + '</p>');
+	  if (item.urn === selected)
+	  {
+	    child.addClass('btn-success');
+	    child.addClass('active');
+	    found = true;
+	  }
+	  else
+	  {
+	    child.addClass('btn-default');
+	  }
+	  dom.append(child);
+	  child.on('click', function () {
+	    if (this.selected && this.doms[this.selected])
+	    {
+	      this.doms[this.selected]
+		.removeClass('btn-success active')
+		.addClass('btn-default');
+	    }
+	    this.doms[item.urn]
+	      .removeClass('btn-default')
+	      .addClass('btn-success active');
+	    this.selected = item.urn;
+	    this.$('#custom-image').val(item.urn);
+	  }.bind(this));
+
+	  this.shown[item.urn] = true;
+	  this.names[item.urn] = imageDisplay(item.urn).toLowerCase();
+	  this.descriptions[item.urn] = item.description.toLowerCase();
+	  this.doms[item.urn] = child;
+	  this.versions[item.urn] = item.version;
+	}
+	else
+	{
+	  if (this.versions[item.urn] === '' || parseInt(item.version) > parseInt(this.versions[item.urn]))
+	  {
+	    if (this.versions[item.urn] === '0')
+	    {
+	      this.doms[item.urn].find('.version').show();
+	    }
+	    this.versions[item.urn] = item.version;
+	    this.doms[item.urn].find('.version').html('<b>Version:</b> ' + _.escape(item.version));
+	  }
+	}
+      }.bind(this));
+      return found;
+    },
+
+    onSelect: function (event) {
+      var selection = this.selected;
+      if (this.$('#custom-image').val() !== '')
+      {
+	selection = this.$('#custom-image').val();
+      }
+      this.trigger('selected', selection);
+    },
+
+    onClose: function (event) {
+      this.trigger('closed');
+    },
+
+    changeSearch: function (event) {
+      var query = this.$('#search-images').val().toLowerCase();
+      if (query.length < 3)
+      {
+	_.each(_.keys(this.doms), function (key) {
+	  if (! this.shown[key])
+	  {
+	    this.shown[key] = true;
+	    this.doms[key].show();
+	  }
+	}.bind(this));
+      }
+      else
+      {
+	_.each(_.keys(this.doms), function (key) {
+	  if (this.names[key].indexOf(query) !== -1 ||
+	      this.descriptions[key].indexOf(query) !== -1)
+	  {
+	    if (! this.shown[key])
+	    {
+	      this.shown[key] = true;
+	      this.doms[key].show();
+	    }
+	  }
+	  else
+	  {
+	    if (this.shown[key])
+	    {
+	      this.shown[key] = false;
+	      this.doms[key].hide();
+	    }
+	  }
+	}.bind(this));
+      }
+    }
+    
+  });
+
+  function isCompatible(allowed, test)
+  {
+    var result = true;
+    if (allowed && test)
+    {
+      _.each(test, function (candidate) {
+	if (candidate)
+	{
+	  result = result && allowed[candidate];
+	}
+      });
+    }
+    return result;
+  }
+  
+  function imageDisplay(v) {
+    var sp = v.split('+');
+    var display;
+    if (sp.length >= 4)
+    {
+      if (sp[3].substr(0, 12) == 'emulab-ops//')
+      {
+	display = sp[3].substr(12);
+      }
+      else if (sp[3].substr(0, 11) == 'emulab-ops:')
+      {
+	display = sp[3].substr(11);
+      }
+      else
+      {
+	display = sp[3];
+      }
+    }
+    else
+    {
+      display = v;
+    }
+    return display;
+  }
+  
+  common.component.ImagePickerComponent = ImagePickerComponent;
+})();

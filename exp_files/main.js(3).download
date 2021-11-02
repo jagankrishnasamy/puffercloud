@@ -1,0 +1,91 @@
+(function () {
+  /*
+  var loader = window.jacksmod.loader;
+  loader.loadScript('common/Graph.js');
+  loader.loadScript('common/RspecParser.js');
+  loader.loadScript('thumb/ThumbComponent.js');
+*/
+})();
+
+(function () {
+  'use strict';
+
+  var $j = window.jacksmod;
+  function Thumb(rspecCallback)
+  {
+    console.dir(window.jacksmod);
+    if (window.jacksmod.thumb.ThumbComponent === null || window.jacksmod.thumb.ThumbComponent === undefined)
+    {
+      console.log('null or undefined');
+    }
+    this.root = new window.jacksmod.thumb.ThumbComponent();
+    this.graph = new window.jacksmod.common.Graph();
+    this.parser = new window.jacksmod.common.RspecParser();
+    this.cleanup = _.bind(cleanup, this);
+    this.replaceRspec = _.bind(replaceRspec, this);
+    this.rspecCallback = rspecCallback;
+    this.shouldCallback = true;
+    this.tick = _.bind(tick, this);
+    this.oldRspec = null;
+
+    this.el = this.root.render();
+    this.root.update({ processing: true, failed: false });
+  };
+
+  function cleanup()
+  {
+    window.clearInterval(this.tick);
+  }
+
+  function replaceRspec(rspec)
+  {
+    this.shouldCallback = true;
+    if (rspec !== this.oldRspec)
+    {
+      this.parser.replaceRspec(rspec);
+      this.root.update({ processing: true });
+    }
+    this.oldRspec = rspec;
+    window.clearInterval(this.tick);
+    window.setInterval(this.tick, 100);
+  }
+
+  var counter = 5;
+  function tick()
+  {
+    if (! this.parser.isParsed())
+    {
+      this.root.update({ processing: true,
+			 failed: false });
+      this.parser.parseStep();
+    }
+    else if (this.parser.isFailed())
+    {
+      this.root.update({ processing: false,
+			 failed: true });
+    }
+    else
+    {
+      this.graph.setGraph(this.parser.getGraph());
+      if (this.rspecCallback && this.shouldCallback)
+      {
+	console.log('rspeccallback');
+	this.rspecCallback(this.graph);
+	this.shouldCallback = false;
+      }
+      this.root.update({ processing: false,
+			 failed: false,
+			 graph: this.graph });
+      //window.clearInterval(this.tick);
+      if (counter <= 0)
+      {
+	this.root.updateForce();
+	counter = 6;
+      }
+      counter -= 1;
+    }
+  }
+
+  console.log('set Thumb');
+  $j.Thumb = Thumb;
+})();

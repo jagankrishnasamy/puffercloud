@@ -1,0 +1,27 @@
+window.jacksmod.common.util = {
+  imageDisplay: function (v)
+  {
+    var sp = v.split('+');
+    var display;
+    if (sp.length >= 4)
+    {
+      if (sp[3].substr(0, 12) == 'emulab-ops//')
+      {
+	display = sp[3].substr(12);
+      }
+      else if (sp[3].substr(0, 11) == 'emulab-ops:')
+      {
+	display = sp[3].substr(11);
+      }
+      else
+      {
+	display = sp[3];
+      }
+    }
+    else
+    {
+      display = v;
+    }
+    return display;
+  }
+};

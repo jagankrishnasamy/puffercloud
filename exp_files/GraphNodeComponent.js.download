@@ -1,0 +1,164 @@
+(function () {
+  var loader = window.jacksmod.loader;
+  /*
+*/
+})();
+
+(function () {
+  'use strict';
+  var common = window.jacksmod.common;
+
+  var iconUrl = 'https://www.emulab.net/protogeni/jacks-stable/images/default.svg';
+  
+  var GraphNodeComponent = common.ComponentQuery.extend({
+
+    initialize: function ()
+    {
+      this.x = undefined;
+      this.y = undefined;
+      this.forceNode = undefined;
+      this.name = undefined;
+    },
+
+    cleanupForce: function (force)
+    {
+      if (this.forceNode !== undefined)
+      {
+	force.remove([this.forceNode], []);
+      }
+    },
+
+    cleanup: function ()
+    {
+      if (this.rendered)
+      {
+	this.root.remove();
+      }
+    },
+
+    render: function (base)
+    {
+      if (! this.rendered)
+      {
+	this.root = base.append('svg:g');
+	this.$el = $('<div>'); // TODO Replace with actual el
+	this.background = this.root.append('svg:rect')
+	  .attr('class', 'nodebackground')
+	  .attr('x', '-60')
+	  .attr('y', '-50')
+	  .attr('width', '120')
+	  .attr('height', '130');
+
+	this.foreground = this.root.append('svg:g')
+          .attr("class", "node");
+
+	this.rect = this.foreground.append('svg:rect')
+	  .attr('class', 'nodebox')
+	  .attr('x', '-60px')
+	  .attr('y', '-50px')
+	  .attr('width', '120px')
+	  .attr('height', '130px');
+
+	this.status = this.foreground.append('svg:g')
+          .attr('class', 'node-status')
+          .attr('style', 'visibility: hidden');
+	
+	this.status.append('svg:rect')
+	  .attr('x', '20px')
+	  .attr('y', '-50px')
+	  .attr('class', 'node-status-box')
+	  .attr('width', '40px')
+	  .attr('height', '40px');
+	
+	this.status.append('svg:text')
+          .attr('class', 'node-status-text')
+	  .attr('x', '30px')
+	  .attr('y', '-20px')
+	  .text('');
+
+	this.icon = this.foreground.append('svg:image')
+	  .attr('class', 'nodebox')
+	  .attr('x', '-40px')
+	  .attr('y', '-40px')
+	  .attr('width', '80px')
+	  .attr('height', '80px')
+	  .attr('xlink:href', iconUrl);
+
+	this.label = this.foreground.append('svg:text')
+	  .attr("class", "nodetext")
+	  .attr("text-anchor", "middle")
+	  .attr("x", "0px")
+	  .attr("y", "70px");
+      }
+      return this.superRender();
+    },
+
+    update: function (state)
+    {
+      if (state)
+      {
+	if (state.force)
+	{
+	  this.updateForce(state.force);
+	}
+	if (state.node !== undefined && state.node.name !== this.name)
+	{
+	  
+	  this.name = state.node.name;
+	  this.label.text(this.name);
+	  var textWidth = 100;
+	  try
+	  {
+	    this.label.each(function () {
+	      textWidth = this.getBBox().width + 20;
+	    });
+	  } catch (e) {}
+	  textWidth = Math.max(textWidth, 160)
+
+	  this.rect.attr('width', textWidth + 'px');
+	  this.rect.attr('x', (-textWidth/2) + 'px');
+
+	  var url = iconUrl;
+	  if (state.node.icon)
+	  {
+	    url = state.node.icon
+	  }
+	  this.icon.attr('xlink:href', url);
+	  
+//	  this.highlight.attr('width', textWidth + 'px');
+//	  this.highlight.attr('x', (-textWidth/2) + 'px');
+	}
+      }
+      this.superUpdate(state);
+    },
+
+    updateForce: function (force)
+    {
+      if (this.forceNode === undefined)
+      {
+	this.forceNode = {
+	  x: Math.random() * 1000,
+	  y: Math.random() * 1000
+	};
+	force.add([this.forceNode], []);
+      }
+      var x = force.transformX(this.forceNode.x);
+      var y = force.transformY(this.forceNode.y);
+      if (this.x === undefined ||
+	  this.y === undefined ||
+	  Math.abs(this.x - x) > 10 ||
+	  Math.abs(this.y - y) > 10)
+      {
+	this.x = x;
+	this.y = y;
+//	this.root.attr('x', this.x);
+//	this.root.attr('y', this.y);
+	this.root.attr('transform', `translate(${x},${y})`);
+//	console.log('transform', this.forceNode.x, force.scale.deltaX, force.scale.factorX, x);
+      }
+    }
+    
+  });
+
+  common.component.GraphNodeComponent = GraphNodeComponent;
+})();

@@ -1,0 +1,42 @@
+(function () {
+  var loader = window.jacksmod.loader;
+})();
+
+(function () {
+  'use strict';
+  var $j = window.jacksmod;
+  
+  function Graph()
+  {
+    this.nodes = {};
+    this.lans = {};
+    this.interfaces = {};
+    this.sites = {};
+    this.hosts = {};
+    //this.idList = {};
+  }
+
+  var p = Graph.prototype;
+  
+  p.setGraph = function (newGraph)
+  {
+    this.clearGraph();
+    this.nodes = _.clone(newGraph.nodes);
+    this.lans = _.clone(newGraph.lans);
+    this.interfaces = _.clone(newGraph.interfaces);
+    this.sites = _.clone(newGraph.sites);
+    this.hosts = _.clone(newGraph.hosts);
+  }
+
+  p.clearGraph = function ()
+  {
+    this.nodes = {};
+    this.lans = {};
+    this.interfaces = {};
+    this.sites = {};
+    this.hosts = {};
+    this.rspecParser = null;
+  }
+
+  $j.common.Graph = Graph;
+})();

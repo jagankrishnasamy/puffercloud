@@ -1,0 +1,125 @@
+/*
+ * rspecCommon.js
+ *
+ * Common constants and utility functions for dealing with rspecs
+ *
+ */
+
+(function () {
+  var loader = window.jacksmod.loader;
+})();
+
+(function () {
+  'use strict';
+  var $j = window.jacksmod;
+  var rspecCommon = {};
+
+  rspecCommon.rspecNamespace = 'http://www.geni.net/resources/rspec/3';
+  rspecCommon.emulabNamespace = 'http://www.protogeni.net/resources/rspec/ext/emulab/1';
+  rspecCommon.jacksNamespace = 'http://www.protogeni.net/resources/rspec/ext/jacks/1';
+  rspecCommon.openflow3Namespace = 'http://www.geni.net/resources/rspec/ext/openflow/3';
+  rspecCommon.openflow4Namespace = 'http://www.geni.net/resources/rspec/ext/openflow/4';
+  rspecCommon.vlanNamespace ='http://www.geni.net/resources/rspec/ext/shared-vlan/1';
+
+  // Search for all elements called 'selector' in the namespace of the
+  // dom object passed.
+  rspecCommon.findSameNS = function (dom, selector)
+  {
+    var result = $();
+    for (var i = 0; i < dom.length; i += 1)
+    {
+      var namespace = dom[i].namespaceURI;
+      var list = dom[i].getElementsByTagNameNS(namespace, selector);
+      result = result.add($(list));
+    }
+    return result;
+  };
+
+  // Search in the same namespace for a child matching selector and
+  // return attribute inside that child if it exists
+  rspecCommon.findChildAttribute = function (xml, selector, attribute)
+  {
+    var result = undefined;
+    var child = rspecCommon.findSameNS(xml, selector);
+    if (child)
+    {
+      result = child.attr(attribute);
+    }
+    return result;
+  };
+
+  rspecCommon.findOrMake = function (root, tagString)
+  {
+    var result = root.find(tagString);
+    if (result.length === 0)
+    {
+      var namespace = root[0].namespaceURI;
+      result = $($.parseXML('<' + tagString + ' xmlns="' + namespace + '"/>')).find(tagString);
+      root.append(result);
+    }
+    return result;
+  };
+
+  rspecCommon.findOrMakeNS = function (root, tagString, namespace)
+  {
+    var result;
+    var target = root[0].getElementsByTagNameNS(namespace, tagString);
+    if (target.length === 0)
+    {
+      result = rspecCommon.makeNode(root, tagString, namespace);
+    }
+    else
+    {
+      result = $(target[0]);
+    }
+    return result;
+  };
+
+  rspecCommon.makeNode = function (root, tagString, namespace)
+  {
+    var result = $($.parseXML('<' + tagString + ' xmlns="' + namespace + '"></' + tagString + '>')).find(tagString);
+    root.append(result);
+    return result;
+  };
+
+  rspecCommon.removeList = function (root, tag, namespace)
+  {
+    var oldList = root[0].getElementsByTagNameNS(namespace, tag);
+    _.each(oldList, function (item) {
+      $(item).remove();
+    });
+  };
+
+  rspecCommon.replaceList = function (root, list, tag, keys, namespace)
+  {
+    _.each(list, function (item) {
+      var newXml = item.rspec;
+      if (! newXml)
+      {
+	newXml = $($.parseXML('<' + tag + ' xmlns="' + namespace + '"></' + tag + '>')).find(tag);
+      }
+      _.each(keys, function (key) {
+	if (item[key])
+	{
+	  newXml.attr(key, item[key]);
+	}
+	else
+	{
+	  newXml.removeAttr(key)
+	}
+      });
+      root.append(newXml);
+    });
+  };
+
+  rspecCommon.removeNS = function (root, tagString, namespace)
+  {
+    var target = root[0].getElementsByTagNameNS(namespace, tagString);
+    if (target.length > 0)
+    {
+      $(target[0]).remove();
+    }
+  };
+
+  $j.common.RspecLib = rspecCommon;
+})();

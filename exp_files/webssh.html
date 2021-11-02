@@ -1,0 +1,36 @@
+
+<!-- saved from url=(0031)https://users.emulab.net/webssh -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>WebSSH</title>
+<link href="./bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="./xterm.min.css" rel="stylesheet" type="text/css">
+<link href="./fullscreen.min.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div id="waiter" style="display: none"> Connecting ... </div>
+<style>
+.tooltip-inner {
+color: #000;
+background-color: #FFF;
+}
+</style>
+<div class="container">
+<div id="resize-tooltip"></div>
+<div id="status" style="color: red;"></div>
+<div id="terminal"><div dir="ltr" class="terminal xterm fullscreen" tabindex="0"><div class="xterm-viewport" style="background-color: black;"><div class="xterm-scroll-area" style="height: 573px;"></div></div><div class="xterm-screen" style="width: 1845px; height: 374px;"><div class="xterm-helpers"><textarea class="xterm-helper-textarea" aria-label="Terminal input" aria-multiline="false" autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0"></textarea><span class="xterm-char-measure-element" aria-hidden="true" style="font-family: courier-new, courier, monospace; font-size: 15px;">W</span><div class="composition-view"></div></div><canvas class="xterm-text-layer" width="1845" height="374" style="z-index: 0; width: 1845px; height: 374px;"></canvas><canvas class="xterm-selection-layer" width="1845" height="374" style="z-index: 1; width: 1845px; height: 374px;"></canvas><canvas class="xterm-link-layer" width="1845" height="374" style="z-index: 2; width: 1845px; height: 374px;"></canvas><canvas class="xterm-cursor-layer" width="1845" height="374" style="z-index: 3; width: 1845px; height: 374px;"></canvas></div></div></div>
+</div>
+<form id="connect" action="https://users.emulab.net/webssh" method="post"></form>
+<script src="./jquery.min.js.download"></script>
+<script src="./popper.min.js.download"></script>
+<script src="./bootstrap.min.js.download"></script>
+<script src="./xterm.min.js.download"></script>
+<script src="./xterm-addon-fit.min.js.download"></script>
+<script src="./main.js.download"></script>
+<script>
+window.onload = function() {
+window.parent.postMessage("loaded", "*");
+}
+</script>
+
+
+</body></html>

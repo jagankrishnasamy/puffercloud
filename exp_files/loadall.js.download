@@ -1,0 +1,87 @@
+(function () {
+
+  var i;
+  var styles = [
+    'css/jacks-lib.css',
+    'css/tourist.css',
+    'css/select2.css',
+    'css/select2-bootstrap.css',
+    'css/main.css'
+  ];
+
+  for (i = 0; i < styles.length; i += 1)
+  {
+    JACKS_LOADER.loadStyle(styles[i]);
+  }
+
+  var scripts = [
+/*
+    "lib/forge/des.js",
+    "lib/forge/debug.js",
+    "lib/forge/util.js",
+    "lib/forge/log.js",
+    "lib/forge/socket.js",
+    "lib/forge/md5.js",
+    "lib/forge/sha1.js",
+    "lib/forge/hmac.js",
+    "lib/forge/aes.js",
+    "lib/forge/pem.js",
+    "lib/forge/asn1.js",
+    "lib/forge/jsbn.js",
+    "lib/forge/prng.js",
+    "lib/forge/random.js",
+    "lib/forge/oids.js",
+    "lib/forge/rsa.js",
+    "lib/forge/pbe.js",
+    "lib/forge/x509.js",
+    "lib/forge/pki.js",
+    "lib/forge/tls.js",
+    "lib/forge/aesCipherSuites.js",
+    "lib/forge/tlssocket.js",
+    "lib/forge/http.js",
+*/
+    "lib/swfobject.js",
+    "lib/vkbeautify.js"
+  ];
+
+  for (i = 0; i < scripts.length; i += 1)
+  {
+    JACKS_LOADER.loadScript(scripts[i]);
+  }
+
+  if (window.d3v4 === undefined)
+  {
+    JACKS_LOADER.loadScript('lib/d3.js');    
+  }
+  if (window.$ === undefined)
+  {
+    JACKS_LOADER.loadScript('lib/jquery-2.0.3.min.js');
+    JACKS_LOADER.loadScript('lib/bootstrap.min.js');
+  }
+  else if (window.$.fn.modal === undefined)
+  {
+    JACKS_LOADER.loadScript('lib/bootstrap.min.js');
+  }
+  var loadAbsoluteScript = function (path, dataMain) {
+    var script = document.createElement('script');
+    script.src = path;
+    script.type = 'application/javascript';
+    script.async = false;
+    script.defer = false;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  };
+  //loadAbsoluteScript('https://www.emulab.net/protogeni/app/jacksmod/jacksmod.js');
+  //loadAbsoluteScript('https://www.emulab.net/protogeni/app/jacksmod/imagepicker/main.js');
+  var shouldUndefine = false;
+  if (window.require === undefined)
+  {
+    JACKS_LOADER.loadScript('lib/require.js');
+    shouldUndefine = true;
+  }
+  window.JACKS_LOADER.loadScript('js/main.js');
+  if (shouldUndefine)
+  {
+    JACKS_LOADER.loadScript('js/undefine.js');
+  }
+
+}());
