@@ -1,3 +1,0 @@
-window.require = undefined;
-window.define = undefined;
-window.requirejs = undefined;

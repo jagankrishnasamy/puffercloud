@@ -47,7 +47,7 @@ def get_ips(html_path):
 # Input: The target machine's IP
 # Note: Fill in the correct key file here: paramiko.RSAKey.from_private_key_file(r"C:\Users\Jagan\Documents\sshkeys\privkey")
 def run_ssh_commands(ip, priv_key_file, username):
-    paramiko.util.log_to_file("log_" + ip + ".txt")
+    paramiko.util.log_to_file("./logs/"+"log_" + ip + ".txt")
 
     ssh = paramiko.SSHClient()
     k = paramiko.RSAKey.from_private_key_file(priv_key_file)
@@ -58,7 +58,7 @@ def run_ssh_commands(ip, priv_key_file, username):
     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("mkdir testing_dir_b")
     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("pwd > temp.txt")
 
-    with open("commands_b.txt", 'r') as fp:
+    with open("puffer_commands.txt", 'r') as fp:
         cmnds = fp.read().splitlines()
 
     print(cmnds)
@@ -132,8 +132,8 @@ def main():
 
     chrome_driver_path = r'C:\Users\Jagan\Documents\ECE 29401\puffercloud\chromedriver.exe'
     cloud_user = "krish133"
-    cloud_pass = "<Enter Password>"
-    link = "https://www.cloudlab.us/status.php?uuid=ff65e30d-3ba8-11ec-84f8-e4434b2381fc"
+    cloud_pass = "<cloudlab password>"
+    link = "https://www.cloudlab.us/status.php?uuid=e4549f2e-4053-11ec-84f8-e4434b2381fc"
     html_file = r"exp.html" # Only change if providing a custom html file and not using selenium
     priv_key_file = r"C:\Users\Jagan\Documents\sshkeys\privkey"
     ssh_username = "krish133"
@@ -146,14 +146,14 @@ def main():
     print(address_list)
 
     # Flow to run commands on a single machine
-    print(address_list[4])
-    run_ssh_commands(address_list[4], priv_key_file, ssh_username)
+    # print(address_list[4])
+    # run_ssh_commands(address_list[4], priv_key_file, ssh_username)
     # run_single_commands(address_list[3])
 
     # Flow to run all commands on all machines
-    # for item in address_list:
-    #     run_ssh_commands(item, priv_key_file, username)
-    # print("finished")
+    for item in address_list:
+        run_ssh_commands(item, priv_key_file, ssh_username)
+    print("finished")
 
 
 
