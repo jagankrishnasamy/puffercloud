@@ -1,4 +1,4 @@
-# puffercloud
+# Initial Setup/Quickstart
 
 Relevant Files
 1) abr.py - The main program/script to bring up and start up machines
@@ -34,7 +34,10 @@ html_file = If you do not want to use selenium, rename this file to whatever you
 priv_key_file = The path to the private key for ssh connection  
 ssh_username = The ssh username  
 
-After setting up the program, to run the program, simply run abr.py  
+After setting up the program, to run the program, simply run abr.py
+
+# Modifications
+While running this program, you may want to make modifications to help it better suit your needs. Below are a few examples of potential modifications that might need to be made.
 
 Modification - Using different Disk Images
 While using puffer, you may want to use different disk images. For example, you might want to change the video files that are being played by Puffer. Note that for files to be copied in a disk image, the files need to be in a root directory such as /opt. The files under /users/<username> will not be copied. To facilitate this, complete the following procedure:
@@ -51,7 +54,12 @@ While using puffer, you may want to use different disk images. For example, you 
 11) On line 33, change the existing disk image URN for the new disk image URN
 12) Accept and Save everything
 
-Modification - Running different commands 
+Modification - Running different commands
+It is possible that there are other commands that you might want to run on the machines. To do this, simply open the puffer_commands.txt file and edit the commands. There are a few considerations to keep in mind:
+1) Every line is run on a new SSH connection, so every line will be run at the home directory (/users/<username>)
+2) You can use <command>;<command>;<command>... to run multiple commands in a single connection 
+3) Environment variables will not be preserved between commands, so be sure to send them manually or include them in whatever program is being run
+4) Use nohup prior to a command to prevent an SSH disconnect from killing the running program
   
   
   
